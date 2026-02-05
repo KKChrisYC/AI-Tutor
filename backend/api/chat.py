@@ -2,11 +2,14 @@
 Chat API endpoints
 """
 import uuid
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel
 from typing import Optional, List
+from sqlalchemy.orm import Session
 
 from backend.services.rag_service import get_rag_service
+from backend.services.chat_history_service import ChatHistoryService
+from backend.models.database import get_db
 from backend.config import get_settings
 
 router = APIRouter()
@@ -17,6 +20,7 @@ class ChatRequest(BaseModel):
     """Chat request model"""
     message: str
     conversation_id: Optional[str] = None
+    user_id: Optional[int] = None  # For logged-in users
     use_rag: bool = True
 
 
@@ -36,12 +40,13 @@ class ChatResponse(BaseModel):
 
 
 @router.post("/", response_model=ChatResponse)
-async def chat(request: ChatRequest):
+async def chat(request: ChatRequest, db: Session = Depends(get_db)):
     """
     Send a message to AI Tutor and get a response.
     
     - **message**: User's question
     - **conversation_id**: Optional conversation ID for context continuity
+    - **user_id**: Optional user ID for logged-in users
     - **use_rag**: Whether to use RAG for retrieval (default: True)
     """
     # Check if API key is configured
@@ -51,10 +56,23 @@ async def chat(request: ChatRequest):
             detail="LLM API Key 未配置。请在 .env 文件中设置 DEEPSEEK_API_KEY。"
         )
     
-    # Generate conversation ID if not provided
-    conversation_id = request.conversation_id or str(uuid.uuid4())
+    # Get or create chat session
+    chat_service = ChatHistoryService(db)
+    session = chat_service.get_or_create_session(
+        session_id=request.conversation_id,
+        user_id=request.user_id
+    )
+    conversation_id = session.session_id
     
     try:
+        # Save user message
+        chat_service.add_message(
+            session_id=conversation_id,
+            role="user",
+            content=request.message,
+            user_id=request.user_id
+        )
+        
         if request.use_rag:
             # Use RAG service for retrieval-augmented generation
             rag_service = get_rag_service()
@@ -74,11 +92,23 @@ async def chat(request: ChatRequest):
                 for s in result.get("sources", [])
             ]
             
+            answer = result["answer"]
+            has_context = result.get("has_context", True)
+            
+            # Save assistant message with sources
+            chat_service.add_message(
+                session_id=conversation_id,
+                role="assistant",
+                content=answer,
+                sources=[s.dict() for s in sources],
+                has_rag_context=has_context
+            )
+            
             return ChatResponse(
-                answer=result["answer"],
+                answer=answer,
                 conversation_id=conversation_id,
                 sources=sources,
-                has_context=result.get("has_context", True)
+                has_context=has_context
             )
         else:
             # Direct LLM call without RAG
@@ -88,6 +118,14 @@ async def chat(request: ChatRequest):
                 {"role": "system", "content": "你是一个专业的《数据结构》课程助教。"},
                 {"role": "user", "content": request.message}
             ])
+            
+            # Save assistant message
+            chat_service.add_message(
+                session_id=conversation_id,
+                role="assistant",
+                content=answer,
+                has_rag_context=False
+            )
             
             return ChatResponse(
                 answer=answer,
@@ -104,7 +142,24 @@ async def chat(request: ChatRequest):
 
 
 @router.get("/history/{conversation_id}")
-async def get_chat_history(conversation_id: str):
+async def get_chat_history(conversation_id: str, db: Session = Depends(get_db)):
     """Get chat history for a conversation"""
-    # TODO: Implement chat history retrieval
-    return {"conversation_id": conversation_id, "messages": []}
+    chat_service = ChatHistoryService(db)
+    messages = chat_service.get_session_history_formatted(conversation_id)
+    
+    return {
+        "conversation_id": conversation_id,
+        "messages": messages
+    }
+
+
+@router.delete("/session/{conversation_id}")
+async def delete_chat_session(conversation_id: str, db: Session = Depends(get_db)):
+    """Delete a chat session"""
+    chat_service = ChatHistoryService(db)
+    success = chat_service.delete_session(conversation_id)
+    
+    if not success:
+        raise HTTPException(status_code=404, detail="会话不存在")
+    
+    return {"status": "success", "message": "会话已删除"}
