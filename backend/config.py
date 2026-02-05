@@ -12,6 +12,10 @@ class Settings(BaseSettings):
     deepseek_api_key: str = ""
     deepseek_base_url: str = "https://api.deepseek.com"
     
+    # Model Configuration
+    model_name: str = "deepseek-chat"
+    temperature: float = 0.7
+    
     # MySQL Database
     mysql_host: str = "localhost"
     mysql_port: int = 3306
@@ -21,9 +25,15 @@ class Settings(BaseSettings):
     
     # ChromaDB
     chroma_persist_dir: str = "./data/chroma_db"
+    chroma_collection: str = "knowledge_base"
     
     # Embedding Model
     embedding_model: str = "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
+    
+    # JWT Configuration
+    jwt_secret_key: str = "your-secret-key-change-in-production"
+    jwt_algorithm: str = "HS256"
+    access_token_expire_hours: int = 24
     
     @property
     def mysql_url(self) -> str:
