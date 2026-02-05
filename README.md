@@ -1,69 +1,103 @@
-# AI-Tutor: Customized AI Tutoring for Diverse Academic Courses
+# AI Tutor - 智能助教系统
 
-<div align="center">
-    <img src="sb_logo.png" alt="AI_Tutor" width="200"/>
-</div>
+基于大模型与 RAG 技术的个性化智能学习与助教系统
 
-## Overview
-AI-Tutor, an educational web app, integrates the latest OpenAI's Assistant API and Retrieval-Augmented Generation (RAG) to offer personalized tutoring across various academic courses. It adapts to specific course materials, ensuring a dynamic, responsive, and tailored learning experience.
+## 🎯 项目简介
 
-## Core Features
-- **Versatile Application**: Adaptable to any course with the requirement of uploading course-specific materials.
-- **Intelligent Tutoring**: Tailored responses that align with course content, overcoming information hallucination.
-- **User Interface**: Streamlit-based, intuitive UI hosted on the Free Streamlit Community Cloud.
-- **Data Privacy and Security**: Adherence to OpenAI's stringent privacy practices.
+AI Tutor 是一个面向《数据结构》课程的智能助教系统，采用 RAG（检索增强生成）技术，结合大语言模型，为学生提供：
 
-## Technical Composition
-- **Core Technologies**: Utilizes LLM and RAG from OpenAI's Assistants API for core AI functionalities.
-- **Programming Language**: Primarily Python.
-- **Hosting Server**: Free Streamlit Community Cloud.
+- 📚 基于课程资料的精准问答（带知识溯源）
+- 📊 学生学习画像分析
+- 📝 个性化智能出题与批改
 
-## Methodology
-AI-Tutor employs a combination of advanced AI technologies to enhance the learning experience:
+## 🛠️ 技术栈
 
-- **LLM API**: This forms the backbone of AI-Tutor's intelligence. It enables the platform to understand complex queries, retrieve information efficiently, and provide accurate, context-aware responses.
+| 层级 | 技术 |
+|------|------|
+| 前端 | Streamlit |
+| 后端 | FastAPI |
+| RAG 框架 | LangChain |
+| 向量数据库 | ChromaDB |
+| 关系数据库 | MySQL |
+| LLM API | DeepSeek |
 
-- **Retrieval-Augmented Generation (RAG)**: RAG is a key component that supplements the AI's knowledge base. By accessing external data sources, RAG ensures that the AI's responses are not only relevant but also grounded in verified information. This feature is crucial for maintaining the accuracy and reliability of the educational content provided by AI-Tutor.
+## 📁 项目结构
 
-  - *Mitigating Information Hallucination*: RAG effectively addresses the challenge of AI-generated misinformation by validating responses against trusted external sources.
-  - *Personalized Learning Experience*: The use of diverse data sources enables AI-Tutor to tailor its responses to specific educational contexts and individual learner needs.
+```
+AI_Tutor/
+├── backend/                 # FastAPI 后端
+│   ├── api/                 # API 路由
+│   ├── core/                # 核心组件 (LLM, RAG)
+│   ├── models/              # 数据模型
+│   ├── services/            # 业务逻辑
+│   └── utils/               # 工具函数
+├── frontend/                # Streamlit 前端
+│   ├── pages/               # 多页面
+│   └── components/          # UI 组件
+├── data/                    # 数据目录
+│   ├── documents/           # 原始文档
+│   └── chroma_db/           # 向量数据库
+└── scripts/                 # 脚本工具
+```
 
-![Method](method.png)
+## 🚀 快速开始
 
+### 1. 克隆项目
 
+```bash
+git clone https://github.com/KKChrisYC/AI-Tutor.git
+cd AI-Tutor
+```
 
+### 2. 创建虚拟环境
 
-## Web App Components
-<div align="center">
-    <img src="web_app_view.png" alt="AI_Tutor" width="700"/>
-</div>
+```bash
+python3 -m venv venv
+source venv/bin/activate  # Linux/Mac
+# or
+.\venv\Scripts\activate  # Windows
+```
 
-- **Sidebar**: 
-  - Option to delete all uploaded materials.
-  - Generate and download Q&A records in HTML format.
-- **Main Page**: 
-  - API Key input.
-  - Upload feature for course materials.
-  - Interactive Q&A section.
-  - Display and archive of Q&A records.
-  - Feature to pose new questions.
+### 3. 安装依赖
 
-## Getting Started
-1. Access [AI-Tutor Streamlit App](https://aitutor-gawywv3h6qfwzzvikfzkpl.streamlit.app/).
-2. Enter your OpenAI API Key.
-3. Upload course materials for a custom tutoring session.
-4. Interact with the AI assistant for course-specific queries.
-5. Download the Q&A session transcript in HTML format.
+```bash
+pip install -r requirements.txt
+```
 
-## Benefits
-- **Enhanced Learning Experience**: Integrates RAG with AI technologies for a personalized educational journey.
-- **Data Privacy Assurance**: Strong commitment to user data protection.
-- **Current and Relevant Responses**: Ensures up-to-date and accurate information.
-- **Broad Course Coverage**: Applicable across various educational fields and disciplines.
-- **Interactive Tutoring**: Real-time feedback and dynamic learning sessions.
+### 4. 配置环境变量
 
-## References
-- [OpenAI Assistant API Documentation](https://platform.openai.com/docs/guides/assistants)
-- [Introduction to Retrieval-Augmented Generation (RAG)](https://www.datastax.com/blog/2020/10/introducing-retrieval-augmented-generation-rag)
-- [Vector Database Similarity Search](https://www.infoworld.com/article/3634357/what-is-vector-search-better-search-through-ai.html)
-- [OpenAI Privacy and Security Practices](https://openai.com/security)
+```bash
+cp .env.example .env
+# 编辑 .env 文件，填入你的 API Key 和数据库配置
+```
+
+### 5. 启动后端服务
+
+```bash
+uvicorn backend.main:app --reload --port 8000
+```
+
+### 6. 启动前端
+
+```bash
+cd frontend
+streamlit run app.py
+```
+
+## 📖 API 文档
+
+启动后端后访问：http://localhost:8000/docs
+
+## 📝 开发进度
+
+- [x] 项目架构搭建
+- [ ] DeepSeek API 集成
+- [ ] RAG 检索流水线
+- [ ] 知识库构建
+- [ ] 用户系统
+- [ ] 学生画像
+- [ ] 智能出题
+
+## 📄 License
+
+MIT License
